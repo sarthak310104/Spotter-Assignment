@@ -63,3 +63,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 HERE_API_KEY = os.getenv("HERE_API_KEY", "")
 WEATHER_CACHE_SECONDS = int(os.getenv("WEATHER_CACHE_SECONDS", "1800"))
+
+# "lat,lng" adds a fake storm there for demos, leave empty for real weather
+_storm = os.getenv("DEMO_STORM", "").split(",")
+DEMO_STORM = tuple(map(float, _storm)) if len(_storm) == 2 else None

@@ -27,6 +27,18 @@ npm run dev
 
 Tests: `cd backend && pytest`
 
+`test_planner.py` runs the whole planner with faked routes and weather: calm weather, heavy rain on one route, and the 30,000 / 40,000 lb wind rules.
+
+## Seeing bad weather in the UI
+
+Real weather is often calm, so there's a demo switch. Set `DEMO_STORM` in `backend/.env` to a lat,lng and restart the server:
+
+```
+DEMO_STORM=35.22,-101.83
+```
+
+That adds a storm (up to ~53 mph wind, ~0.8 in/hr rain, about 90 mi wide) on top of the real forecast. It is strongest from about 2h to 30h after now and drifts east, so the slider shows it build and fade. Leave it empty for real weather.
+
 ## How it works
 
 1. HERE Routing v8 (truck mode, gross weight set) returns up to 3 routes.

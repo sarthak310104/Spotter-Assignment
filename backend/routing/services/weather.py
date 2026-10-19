@@ -4,6 +4,8 @@ import requests
 from django.conf import settings
 from django.core.cache import cache
 
+from . import storm
+
 OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
 BATCH_SIZE = 50
 FORECAST_DAYS = 10
@@ -59,6 +61,8 @@ def get_series(cells):
                 {_key(c): s for c, s in result.items()},
                 timeout=settings.WEATHER_CACHE_SECONDS,
             )
+    if settings.DEMO_STORM:
+        return {c: storm.apply(c, s, settings.DEMO_STORM) for c, s in found.items()}
     return found
 
 
