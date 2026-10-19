@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { nextHourLocal } from "../lib/format";
+import { DESTINATION_COLOR, nextHourLocal, ORIGIN_COLOR } from "../lib/format";
 import type { Interval, Place, TripInput } from "../types";
 import { PlaceInput } from "./PlaceInput";
 import styles from "./TripForm.module.css";
@@ -32,8 +32,8 @@ export function TripForm({ loading, onSubmit }: Props) {
 
   return (
     <form className={styles.form} onSubmit={handleSubmit}>
-      <PlaceInput label="From" value={origin} onChange={setOrigin} />
-      <PlaceInput label="To" value={destination} onChange={setDestination} />
+      <PlaceInput label="From" color={ORIGIN_COLOR} value={origin} onChange={setOrigin} />
+      <PlaceInput label="To" color={DESTINATION_COLOR} value={destination} onChange={setDestination} />
 
       <div className={styles.row}>
         <label className={styles.field}>
@@ -49,7 +49,7 @@ export function TripForm({ loading, onSubmit }: Props) {
           <input
             type="number"
             min={1}
-            step={1000}
+            step={1}
             value={loadLb}
             onChange={(e) => setLoadLb(Number(e.target.value))}
           />

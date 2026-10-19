@@ -36,7 +36,7 @@ export function ForecastSlider({ start, hour, onChange }: Props) {
         onChange={(e) => onChange(Number(e.target.value))}
       />
       <span className={styles.time}>
-        {disabled ? "Forecast" : `${clock(start + hour * 3600)} (+${hour}h)`}
+        {disabled ? "Plan a trip to see the forecast" : `${clock(start + hour * 3600)} (+${hour}h)`}
       </span>
     </div>
   );

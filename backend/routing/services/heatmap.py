@@ -34,7 +34,8 @@ def build(corridor, departure, load_lb):
     size = 0.25 if span < 6 else 0.5
     cells = _grid(corridor, size)
     series = weather.get_series(cells)
-    start = int(departure.timestamp()) // 3600 * 3600
+    # hour 0 is the departure itself; at() picks the nearest forecast hour
+    start = int(departure.timestamp())
 
     levels, scores = [], []
     for h in range(HOURS):

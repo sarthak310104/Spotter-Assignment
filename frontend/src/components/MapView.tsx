@@ -1,11 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import maplibregl, { type GeoJSONSource } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { clock, LEVEL_COLORS, LEVEL_NAMES, levelColor, levelName } from "../lib/format";
+import {
+  clock,
+  DESTINATION_COLOR,
+  LEVEL_COLORS,
+  LEVEL_NAMES,
+  levelColor,
+  levelName,
+  ORIGIN_COLOR,
+  routeColor,
+} from "../lib/format";
 import type { Heatmap, Plan } from "../types";
 import styles from "./MapView.module.css";
 
-const STYLE_URL = "https://tiles.openfreemap.org/styles/positron";
+const STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
 const EMPTY: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
 
 type Props = {
@@ -80,8 +89,17 @@ export function MapView({ plan, selectedId, onSelect, heatmap, hour }: Props) {
         paint: {
           "fill-extrusion-color": ["get", "color"],
           "fill-extrusion-height": ["get", "height"],
-          "fill-extrusion-opacity": 0.45,
+          "fill-extrusion-opacity": 0.8,
         },
+      });
+      // dark edge under the selected route so it reads over the weather columns
+      map.addLayer({
+        id: "routes-casing",
+        type: "line",
+        source: "routes",
+        filter: ["==", ["get", "selected"], true],
+        layout: { "line-join": "round", "line-cap": "round" },
+        paint: { "line-color": "#0d1116", "line-width": 10 },
       });
       map.addLayer({
         id: "routes",
@@ -93,8 +111,9 @@ export function MapView({ plan, selectedId, onSelect, heatmap, hour }: Props) {
           "line-sort-key": ["case", ["get", "selected"], 1, 0],
         },
         paint: {
-          "line-color": ["case", ["get", "selected"], "#1a73e8", "#a3a9b0"],
-          "line-width": ["case", ["get", "selected"], 5, 3],
+          "line-color": ["get", "color"],
+          "line-width": ["case", ["get", "selected"], 6, 3.5],
+          "line-opacity": ["case", ["get", "selected"], 1, 0.75],
         },
       });
       map.addLayer({
@@ -104,7 +123,7 @@ export function MapView({ plan, selectedId, onSelect, heatmap, hour }: Props) {
         paint: {
           "circle-radius": 5,
           "circle-color": ["get", "color"],
-          "circle-stroke-color": "#fff",
+          "circle-stroke-color": "#0d1116",
           "circle-stroke-width": 1.5,
         },
       });
@@ -139,6 +158,15 @@ export function MapView({ plan, selectedId, onSelect, heatmap, hour }: Props) {
     const bounds = new maplibregl.LngLatBounds();
     plan.routes.forEach((r) => r.geometry.forEach((p) => bounds.extend(p)));
     map.fitBounds(bounds, { padding: 60, pitch: 45, duration: 800 });
+
+    const line = plan.routes[0]?.geometry ?? [];
+    if (line.length < 2) return;
+    const start = new maplibregl.Marker({ color: ORIGIN_COLOR }).setLngLat(line[0]).addTo(map);
+    const end = new maplibregl.Marker({ color: DESTINATION_COLOR }).setLngLat(line[line.length - 1]).addTo(map);
+    return () => {
+      start.remove();
+      end.remove();
+    };
   }, [ready, plan]);
 
   useEffect(() => {
@@ -146,9 +174,9 @@ export function MapView({ plan, selectedId, onSelect, heatmap, hour }: Props) {
     if (!ready || !map) return;
     setData(map, "routes", {
       type: "FeatureCollection",
-      features: (plan?.routes ?? []).map((r) => ({
+      features: (plan?.routes ?? []).map((r, i) => ({
         type: "Feature",
-        properties: { id: r.id, selected: r.id === selectedId },
+        properties: { id: r.id, selected: r.id === selectedId, color: routeColor(i) },
         geometry: { type: "LineString", coordinates: r.geometry },
       })),
     });

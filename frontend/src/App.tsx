@@ -18,7 +18,10 @@ export default function App() {
   return (
     <div className={styles.app}>
       <aside className={styles.panel}>
-        <h1 className={styles.title}>Truck weather routing</h1>
+        <header className={styles.sign}>
+          <h1>Truck weather routing</h1>
+          <p>Safest route for your load and departure time</p>
+        </header>
         <TripForm loading={loading} onSubmit={run} />
         {error && <p className={styles.error}>{error}</p>}
         {plan && (

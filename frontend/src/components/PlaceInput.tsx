@@ -5,18 +5,22 @@ import styles from "./TripForm.module.css";
 
 type Props = {
   label: string;
+  color: string;
   value: Place | null;
   onChange: (p: Place | null) => void;
 };
 
-export function PlaceInput({ label, value, onChange }: Props) {
+export function PlaceInput({ label, color, value, onChange }: Props) {
   const [text, setText] = useState(value?.label ?? "");
   const [open, setOpen] = useState(false);
   const results = usePlaceSearch(text, open && !value);
 
   return (
     <label className={styles.field}>
-      <span>{label}</span>
+      <span className={styles.labelRow}>
+        <i className={styles.pin} style={{ background: color, color }} />
+        {label}
+      </span>
       <div className={styles.suggestWrap}>
         <input
           value={text}

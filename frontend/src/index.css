@@ -1,15 +1,70 @@
+:root {
+  color-scheme: dark;
+
+  --sign-green: #00704a;
+  --sign-green-light: #0a8a5c;
+  --shield-blue: #1d4e9e;
+  --shield-red: #c8102e;
+
+  --bg: #161b21;
+  --panel: #1b2129;
+  --card: #232b35;
+  --card-hover: #2a3440;
+  --input: #1a2027;
+  --line: #34404d;
+  --ink: #e8ecf0;
+  --muted: #9aa6b2;
+  --warn: #ff7a70;
+}
+
 * {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  color: #202124;
-  background: #fff;
+  font-family: "Overpass", system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+}
+
+:focus-visible {
+  outline: 2px solid #6ea8ff;
+  outline-offset: 2px;
 }
 
 .maplibregl-popup-content {
+  font-family: "Overpass", system-ui, sans-serif;
   font-size: 13px;
   line-height: 1.5;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.maplibregl-popup-tip {
+  border-top-color: var(--card) !important;
+  border-bottom-color: var(--card) !important;
+}
+
+.maplibregl-ctrl-group {
+  background: var(--card);
+}
+
+.maplibregl-ctrl-group button + button {
+  border-top-color: var(--line);
+}
+
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+  filter: invert(1);
+}
+
+.maplibregl-ctrl-attrib {
+  color: var(--muted);
+  background: rgba(27, 33, 41, 0.8) !important;
+}
+
+.maplibregl-ctrl-attrib a {
+  color: var(--muted);
 }
