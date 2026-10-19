@@ -1,0 +1,30 @@
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-top: 1px solid #e8eaed;
+  background: #fff;
+}
+
+.bar input {
+  flex: 1;
+}
+
+.bar button {
+  font: inherit;
+  font-size: 13px;
+  min-width: 60px;
+  padding: 5px 10px;
+  border: 1px solid #dadce0;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.time {
+  font-size: 13px;
+  color: #3c4043;
+  min-width: 140px;
+  text-align: right;
+}

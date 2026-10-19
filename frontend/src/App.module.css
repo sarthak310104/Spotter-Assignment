@@ -1,0 +1,43 @@
+.app {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  height: 100vh;
+}
+
+.panel {
+  overflow-y: auto;
+  border-right: 1px solid #e8eaed;
+  background: #fff;
+}
+
+.title {
+  margin: 0;
+  padding: 16px 16px 0;
+  font-size: 17px;
+  font-weight: 500;
+  color: #202124;
+}
+
+.error {
+  margin: 0 16px 12px;
+  font-size: 13px;
+  color: #b3261e;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+@media (max-width: 760px) {
+  .app {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 60vh;
+    height: auto;
+  }
+
+  .panel {
+    border-right: 0;
+  }
+}
