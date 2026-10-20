@@ -28,5 +28,13 @@ export function useTrip() {
     }
   }, []);
 
-  return { plan, heatmap, loading, error, run };
+  const reset = useCallback(() => {
+    runId.current++;
+    setPlan(null);
+    setHeatmap(null);
+    setError(null);
+    setLoading(false);
+  }, []);
+
+  return { plan, heatmap, loading, error, run, reset };
 }

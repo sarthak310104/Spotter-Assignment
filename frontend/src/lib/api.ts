@@ -1,4 +1,4 @@
-import type { Heatmap, Place, Plan, TripInput } from "../types";
+import type { Heatmap, Place, Plan, Region, TripInput } from "../types";
 
 const BASE = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 
@@ -15,8 +15,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return body as T;
 }
 
-export const searchPlaces = (q: string, signal?: AbortSignal) =>
-  request<Place[]>(`places/?q=${encodeURIComponent(q)}`, { signal });
+export const fetchRegions = () => request<{ default: string; regions: Region[] }>("regions/");
+
+export const searchPlaces = (q: string, region: string, signal?: AbortSignal) =>
+  request<Place[]>(`places/?q=${encodeURIComponent(q)}&region=${region}`, { signal });
 
 export const fetchPlan = (t: TripInput) =>
   request<Plan>("plan/", {

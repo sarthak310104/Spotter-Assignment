@@ -1,5 +1,7 @@
 export type Place = { label: string; lat: number; lng: number };
 
+export type Region = { id: string; name: string; center: [number, number]; zoom: number }; // center is [lat, lng]
+
 export type Level = 0 | 1 | 2 | 3 | 4;
 
 export type Weather = { wind_mph: number; rain_in: number; snow_in: number };

@@ -6,14 +6,15 @@ import styles from "./TripForm.module.css";
 type Props = {
   label: string;
   color: string;
+  region: string;
   value: Place | null;
   onChange: (p: Place | null) => void;
 };
 
-export function PlaceInput({ label, color, value, onChange }: Props) {
+export function PlaceInput({ label, color, region, value, onChange }: Props) {
   const [text, setText] = useState(value?.label ?? "");
   const [open, setOpen] = useState(false);
-  const results = usePlaceSearch(text, open && !value);
+  const results = usePlaceSearch(text, region, open && !value);
 
   return (
     <label className={styles.field}>

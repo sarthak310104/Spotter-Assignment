@@ -11,7 +11,7 @@ import {
   ORIGIN_COLOR,
   routeColor,
 } from "../lib/format";
-import type { Heatmap, Plan } from "../types";
+import type { Heatmap, Plan, Region } from "../types";
 import styles from "./MapView.module.css";
 
 const STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
@@ -19,6 +19,7 @@ const EMPTY: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: 
 
 type Props = {
   plan: Plan | null;
+  region: Region;
   selectedId: string | null;
   onSelect: (id: string) => void;
   heatmap: Heatmap | null;
@@ -60,7 +61,7 @@ function setData(map: maplibregl.Map, id: string, data: GeoJSON.FeatureCollectio
   (map.getSource(id) as GeoJSONSource | undefined)?.setData(data);
 }
 
-export function MapView({ plan, selectedId, onSelect, heatmap, hour }: Props) {
+export function MapView({ plan, region, selectedId, onSelect, heatmap, hour }: Props) {
   const box = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const selectRef = useRef(onSelect);
@@ -71,8 +72,8 @@ export function MapView({ plan, selectedId, onSelect, heatmap, hour }: Props) {
     const map = new maplibregl.Map({
       container: box.current!,
       style: STYLE_URL,
-      center: [-98.5, 39],
-      zoom: 3.6,
+      center: [region.center[1], region.center[0]],
+      zoom: region.zoom,
       pitch: 45,
     });
     map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "top-right");
@@ -150,6 +151,13 @@ export function MapView({ plan, selectedId, onSelect, heatmap, hour }: Props) {
     mapRef.current = map;
     return () => map.remove();
   }, []);
+
+  // move to the region when it changes and there's no trip on screen
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!ready || !map || plan) return;
+    map.flyTo({ center: [region.center[1], region.center[0]], zoom: region.zoom, pitch: 45, duration: 1200 });
+  }, [ready, region, plan]);
 
   // fit to all routes when a new plan comes in
   useEffect(() => {

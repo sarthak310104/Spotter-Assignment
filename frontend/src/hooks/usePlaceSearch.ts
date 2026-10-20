@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { searchPlaces } from "../lib/api";
 import type { Place } from "../types";
 
-export function usePlaceSearch(query: string, enabled: boolean) {
+export function usePlaceSearch(query: string, region: string, enabled: boolean) {
   const [results, setResults] = useState<Place[]>([]);
 
   useEffect(() => {
@@ -12,13 +12,13 @@ export function usePlaceSearch(query: string, enabled: boolean) {
     }
     const ctrl = new AbortController();
     const t = setTimeout(() => {
-      searchPlaces(query, ctrl.signal).then(setResults).catch(() => setResults([]));
+      searchPlaces(query, region, ctrl.signal).then(setResults).catch(() => setResults([]));
     }, 250);
     return () => {
       clearTimeout(t);
       ctrl.abort();
     };
-  }, [query, enabled]);
+  }, [query, region, enabled]);
 
   return results;
 }

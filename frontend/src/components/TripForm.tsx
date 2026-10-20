@@ -1,12 +1,18 @@
 import { useState, type FormEvent } from "react";
 import { DESTINATION_COLOR, nextHourLocal, ORIGIN_COLOR } from "../lib/format";
-import type { Interval, Place, TripInput } from "../types";
+import type { Interval, Place, Region, TripInput } from "../types";
 import { PlaceInput } from "./PlaceInput";
 import styles from "./TripForm.module.css";
 
-type Props = { loading: boolean; onSubmit: (t: TripInput) => void };
+type Props = {
+  loading: boolean;
+  regions: Region[];
+  regionId: string;
+  onRegionChange: (id: string) => void;
+  onSubmit: (t: TripInput) => void;
+};
 
-export function TripForm({ loading, onSubmit }: Props) {
+export function TripForm({ loading, regions, regionId, onRegionChange, onSubmit }: Props) {
   const [origin, setOrigin] = useState<Place | null>(null);
   const [destination, setDestination] = useState<Place | null>(null);
   const [departure, setDeparture] = useState(nextHourLocal());
@@ -32,8 +38,41 @@ export function TripForm({ loading, onSubmit }: Props) {
 
   return (
     <form className={styles.form} onSubmit={handleSubmit}>
-      <PlaceInput label="From" color={ORIGIN_COLOR} value={origin} onChange={setOrigin} />
-      <PlaceInput label="To" color={DESTINATION_COLOR} value={destination} onChange={setDestination} />
+      <label className={styles.field}>
+        <span>Region</span>
+        <select
+          value={regionId}
+          onChange={(e) => {
+            setOrigin(null);
+            setDestination(null);
+            onRegionChange(e.target.value);
+          }}
+        >
+          {regions.map((r) => (
+            <option key={r.id} value={r.id}>
+              {r.name}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      {/* key remounts the inputs so their text clears when the region changes */}
+      <PlaceInput
+        key={`from-${regionId}`}
+        label="From"
+        color={ORIGIN_COLOR}
+        region={regionId}
+        value={origin}
+        onChange={setOrigin}
+      />
+      <PlaceInput
+        key={`to-${regionId}`}
+        label="To"
+        color={DESTINATION_COLOR}
+        region={regionId}
+        value={destination}
+        onChange={setDestination}
+      />
 
       <div className={styles.row}>
         <label className={styles.field}>

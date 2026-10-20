@@ -50,7 +50,13 @@ That adds a storm (up to ~53 mph wind, ~0.8 in/hr rain, about 90 mi wide) on top
 
 The heatmap is a grid of cells within 40 miles of any route, with levels for every hour from departure to +48h. The slider swaps pre-built hourly layers, so scrubbing doesn't hit the API.
 
+## Regions
+
+Pick a region first (United States, Canada, North America, Europe, United Kingdom, India, Australia). Place search is limited to that region's countries and the map moves there. Regions live in `backend/routing/regions.py`, so adding one is a single entry.
+
 ## Assumptions
+
+- The brief's units are US (mph, in/hr, lb), so risk rules and distances stay in those units in every region.
 
 - Range boundaries: lower bound inclusive (25 mph is Moderate, 0.25 in/hr rain is High), 1.00 in/hr rain and 3.0 in/hr snow are still Severe.
 - No-travel miles rank worse than severe miles, even though the brief only lists severe and high.

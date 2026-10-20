@@ -22,10 +22,16 @@ def _get(url, params):
     return resp.json()
 
 
-def suggest(query):
+def suggest(query, region):
+    lat, lng = region["center"]
     data = _get(
         AUTOSUGGEST_URL,
-        {"q": query, "at": "39.8,-98.6", "in": "countryCode:USA", "limit": 6},
+        {
+            "q": query,
+            "at": f"{lat},{lng}",
+            "in": "countryCode:" + ",".join(region["countries"]),
+            "limit": 6,
+        },
     )
     out = []
     for item in data.get("items", []):

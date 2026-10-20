@@ -3,6 +3,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .regions import DEFAULT_REGION, REGIONS, public_list
 from .serializers import HeatmapSerializer, PlanSerializer
 from .services import heatmap, here, planner
 
@@ -16,13 +17,21 @@ class HealthView(APIView):
         return Response({"ok": True})
 
 
+class RegionsView(APIView):
+    def get(self, request):
+        return Response({"default": DEFAULT_REGION, "regions": public_list()})
+
+
 class PlacesView(APIView):
     def get(self, request):
         q = request.query_params.get("q", "").strip()
+        region = REGIONS.get(request.query_params.get("region", DEFAULT_REGION))
+        if region is None:
+            return Response({"detail": "Unknown region"}, status=status.HTTP_400_BAD_REQUEST)
         if len(q) < 3:
             return Response([])
         try:
-            return Response(here.suggest(q))
+            return Response(here.suggest(q, region))
         except (here.HereError, requests.RequestException) as exc:
             return _upstream_error(exc)
 
