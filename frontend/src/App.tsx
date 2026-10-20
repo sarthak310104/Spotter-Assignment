@@ -5,6 +5,7 @@ import { RouteList } from "./components/RouteList";
 import { TripForm } from "./components/TripForm";
 import { useRegions } from "./hooks/useRegions";
 import { useTrip } from "./hooks/useTrip";
+import type { TripInput, Units } from "./types";
 import styles from "./App.module.css";
 
 export default function App() {
@@ -12,10 +13,16 @@ export default function App() {
   const { regions, region, setRegionId } = useRegions();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hour, setHour] = useState(0);
+  const [units, setUnits] = useState<Units>("imperial"); // units of the trip on screen
 
   useEffect(() => {
     setSelectedId(plan?.recommended ?? null);
   }, [plan]);
+
+  function planTrip(input: TripInput) {
+    setUnits(input.units);
+    run(input);
+  }
 
   function changeRegion(id: string) {
     setRegionId(id);
@@ -35,7 +42,7 @@ export default function App() {
           regions={regions}
           regionId={region.id}
           onRegionChange={changeRegion}
-          onSubmit={run}
+          onSubmit={planTrip}
         />
         {error && <p className={styles.error}>{error}</p>}
         {plan && (
@@ -44,6 +51,7 @@ export default function App() {
             recommended={plan.recommended}
             selectedId={selectedId}
             onSelect={setSelectedId}
+            units={units}
           />
         )}
       </aside>
@@ -51,6 +59,7 @@ export default function App() {
         <MapView
           plan={plan}
           region={region}
+          units={units}
           selectedId={selectedId}
           onSelect={setSelectedId}
           heatmap={heatmap}

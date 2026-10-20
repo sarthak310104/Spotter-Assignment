@@ -37,20 +37,28 @@ def build(corridor, departure, load_lb):
     # hour 0 is the departure itself; at() picks the nearest forecast hour
     start = int(departure.timestamp())
 
-    levels, scores = [], []
+    # one row per hour, one entry per cell; weather is [wind_mph, rain_in, snow_in]
+    levels, scores, conditions, drivers = [], [], [], []
     for h in range(HOURS):
         ts = start + h * 3600
-        row_l, row_s = [], []
+        row_l, row_s, row_w, row_d = [], [], [], []
         for c in cells:
             wx = weather.at(series.get(c), ts)
             if wx is None:
                 row_l.append(-1)
                 row_s.append(0)
+                row_w.append(None)
+                row_d.append(None)
             else:
-                row_l.append(assess(wx["wind_mph"], wx["rain_in"], wx["snow_in"], load_lb)[0])
+                level, driver = assess(wx["wind_mph"], wx["rain_in"], wx["snow_in"], load_lb)
+                row_l.append(level)
                 row_s.append(_score(wx))
+                row_w.append([wx["wind_mph"], wx["rain_in"], wx["snow_in"]])
+                row_d.append(driver)
         levels.append(row_l)
         scores.append(row_s)
+        conditions.append(row_w)
+        drivers.append(row_d)
 
     return {
         "size": size,
@@ -58,4 +66,6 @@ def build(corridor, departure, load_lb):
         "cells": [[c[0], c[1]] for c in cells],
         "levels": levels,
         "scores": scores,
+        "weather": conditions,
+        "drivers": drivers,
     }

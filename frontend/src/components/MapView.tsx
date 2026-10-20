@@ -11,7 +11,8 @@ import {
   ORIGIN_COLOR,
   routeColor,
 } from "../lib/format";
-import type { Heatmap, Plan, Region } from "../types";
+import { marker, weatherLine } from "../lib/units";
+import type { Heatmap, Level, Plan, Region, Units } from "../types";
 import styles from "./MapView.module.css";
 
 const STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
@@ -20,6 +21,7 @@ const EMPTY: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: 
 type Props = {
   plan: Plan | null;
   region: Region;
+  units: Units;
   selectedId: string | null;
   onSelect: (id: string) => void;
   heatmap: Heatmap | null;
@@ -38,6 +40,7 @@ function heatFrames(hm: Heatmap): GeoJSON.FeatureCollection[] {
         {
           type: "Feature",
           properties: {
+            cell: i,
             color: LEVEL_COLORS[level],
             height: 4000 + hm.scores[h][i] * 45000,
           },
@@ -57,16 +60,30 @@ function heatFrames(hm: Heatmap): GeoJSON.FeatureCollection[] {
   }));
 }
 
+// popup text for one heatmap cell at one forecast hour
+function cellHtml(hm: Heatmap, cell: number, hour: number, units: Units) {
+  const level = hm.levels[hour][cell] as Level;
+  const w = hm.weather[hour][cell];
+  const driver = hm.drivers[hour][cell];
+  if (!w) return "No forecast for this hour";
+  const [wind_mph, rain_in, snow_in] = w;
+  return `<b>${levelName(level)}${driver ? ` (${driver})` : ""}</b><br>${clock(hm.start + hour * 3600)} (+${hour}h)<br>${weatherLine({ wind_mph, rain_in, snow_in }, units)}`;
+}
+
 function setData(map: maplibregl.Map, id: string, data: GeoJSON.FeatureCollection) {
   (map.getSource(id) as GeoJSONSource | undefined)?.setData(data);
 }
 
-export function MapView({ plan, region, selectedId, onSelect, heatmap, hour }: Props) {
+export function MapView({ plan, region, units, selectedId, onSelect, heatmap, hour }: Props) {
   const box = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const selectRef = useRef(onSelect);
+  const popupRef = useRef<maplibregl.Popup | null>(null);
+  // the click handlers are set up once, so they read the latest values from here
+  const heatRef = useRef({ heatmap, hour, units });
   const [ready, setReady] = useState(false);
   selectRef.current = onSelect;
+  heatRef.current = { heatmap, hour, units };
 
   useEffect(() => {
     const map = new maplibregl.Map({
@@ -133,15 +150,22 @@ export function MapView({ plan, region, selectedId, onSelect, heatmap, hour }: P
         const id = e.features?.[0]?.properties?.id;
         if (id) selectRef.current(id);
       });
+      const showPopup = (at: maplibregl.LngLat, html: string) => {
+        popupRef.current?.remove();
+        popupRef.current = new maplibregl.Popup({ closeButton: false }).setLngLat(at).setHTML(html).addTo(map);
+      };
       map.on("click", "checkpoints", (e) => {
         const p = e.features?.[0]?.properties;
-        if (!p) return;
-        new maplibregl.Popup({ closeButton: false })
-          .setLngLat(e.lngLat)
-          .setHTML(p.html)
-          .addTo(map);
+        if (p) showPopup(e.lngLat, p.html);
       });
-      for (const layer of ["routes", "checkpoints"]) {
+      map.on("click", "heat", (e) => {
+        // a dot or route under the cursor wins over the column behind it
+        if (map.queryRenderedFeatures(e.point, { layers: ["checkpoints", "routes"] }).length) return;
+        const cell = e.features?.[0]?.properties?.cell;
+        const { heatmap: hm, hour: h, units: u } = heatRef.current;
+        if (hm && cell !== undefined) showPopup(e.lngLat, cellHtml(hm, cell, h, u));
+      });
+      for (const layer of ["routes", "checkpoints", "heat"]) {
         map.on("mouseenter", layer, () => (map.getCanvas().style.cursor = "pointer"));
         map.on("mouseleave", layer, () => (map.getCanvas().style.cursor = ""));
       }
@@ -195,19 +219,19 @@ export function MapView({ plan, region, selectedId, onSelect, heatmap, hour }: P
       features: (route?.checkpoints ?? []).map((cp) => {
         const w = cp.weather;
         const detail = w
-          ? `Wind ${w.wind_mph} mph, rain ${w.rain_in} in/hr, snow ${w.snow_in} in/hr`
+          ? weatherLine(w, units)
           : "Outside forecast range";
         return {
           type: "Feature",
           properties: {
             color: levelColor(cp.level),
-            html: `<b>Mile ${Math.round(cp.mile)}</b><br>Arrive ${clock(cp.eta)}<br>${levelName(cp.level)}${cp.driver ? ` (${cp.driver})` : ""}<br>${detail}`,
+            html: `<b>${marker(cp.mile, units)}</b><br>Arrive ${clock(cp.eta)}<br>${levelName(cp.level)}${cp.driver ? ` (${cp.driver})` : ""}<br>${detail}`,
           },
           geometry: { type: "Point", coordinates: [cp.lng, cp.lat] },
         };
       }),
     });
-  }, [ready, plan, selectedId]);
+  }, [ready, plan, selectedId, units]);
 
   const frames = useMemo(() => (heatmap ? heatFrames(heatmap) : []), [heatmap]);
 
@@ -215,6 +239,7 @@ export function MapView({ plan, region, selectedId, onSelect, heatmap, hour }: P
     const map = mapRef.current;
     if (!ready || !map) return;
     setData(map, "heat", frames[hour] ?? EMPTY);
+    popupRef.current?.remove(); // a cell popup would be stale once the hour changes
   }, [ready, frames, hour]);
 
   return (
@@ -227,6 +252,7 @@ export function MapView({ plan, region, selectedId, onSelect, heatmap, hour }: P
             {name}
           </span>
         ))}
+        <span className={styles.tip}>Click a box or dot for details</span>
       </div>
     </div>
   );

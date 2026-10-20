@@ -37,8 +37,15 @@ def suggest(query, region):
     for item in data.get("items", []):
         pos = item.get("position")
         if pos:
-            label = item.get("address", {}).get("label") or item.get("title")
-            out.append({"label": label, "lat": pos["lat"], "lng": pos["lng"]})
+            address = item.get("address", {})
+            out.append(
+                {
+                    "label": address.get("label") or item.get("title"),
+                    "lat": pos["lat"],
+                    "lng": pos["lng"],
+                    "country": address.get("countryCode"),  # ISO 3166 alpha-3, e.g. "USA"
+                }
+            )
     return out
 
 

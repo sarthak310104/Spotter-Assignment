@@ -3,7 +3,7 @@ import { fetchRegions } from "../lib/api";
 import type { Region } from "../types";
 
 // used until the backend list loads, or if it fails
-const FALLBACK: Region = { id: "us", name: "United States", center: [39.8, -98.6], zoom: 3.6 };
+const FALLBACK: Region = { id: "us", name: "United States", center: [39.8, -98.6], zoom: 3.6, units: "imperial" };
 
 export function useRegions() {
   const [regions, setRegions] = useState<Region[]>([FALLBACK]);

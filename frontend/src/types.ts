@@ -1,6 +1,8 @@
-export type Place = { label: string; lat: number; lng: number };
+export type Place = { label: string; lat: number; lng: number; country?: string | null };
 
-export type Region = { id: string; name: string; center: [number, number]; zoom: number }; // center is [lat, lng]
+export type Units = "imperial" | "metric";
+
+export type Region = { id: string; name: string; center: [number, number]; zoom: number; units: Units }; // center is [lat, lng]
 
 export type Level = 0 | 1 | 2 | 3 | 4;
 
@@ -44,6 +46,8 @@ export type Heatmap = {
   cells: [number, number][];
   levels: number[][]; // [hour][cell], -1 when no forecast
   scores: number[][];
+  weather: ([number, number, number] | null)[][]; // [hour][cell] as [wind_mph, rain_in, snow_in]
+  drivers: ("wind" | "rain" | "snow" | null)[][];
 };
 
 export type Interval = 10 | 25 | 50;
@@ -54,4 +58,5 @@ export type TripInput = {
   departure: string;
   loadLb: number;
   intervalMi: Interval;
+  units: Units; // display only, the backend always works in mi, mph, in and lb
 };

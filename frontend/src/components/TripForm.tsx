@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { DESTINATION_COLOR, nextHourLocal, ORIGIN_COLOR } from "../lib/format";
+import { displayToLb, intervalLabel, lbToDisplay, loadUnit, unitsFor } from "../lib/units";
 import type { Interval, Place, Region, TripInput } from "../types";
 import { PlaceInput } from "./PlaceInput";
 import styles from "./TripForm.module.css";
@@ -18,6 +19,8 @@ export function TripForm({ loading, regions, regionId, onRegionChange, onSubmit 
   const [departure, setDeparture] = useState(nextHourLocal());
   const [loadLb, setLoadLb] = useState(40000);
   const [interval, setIntervalMi] = useState<Interval>(25);
+  const region = regions.find((r) => r.id === regionId);
+  const units = unitsFor(origin, destination, region?.units ?? "imperial");
   const ready = origin && destination && loadLb > 0;
 
   function submit(intervalMi = interval) {
@@ -28,6 +31,7 @@ export function TripForm({ loading, regions, regionId, onRegionChange, onSubmit 
       departure: new Date(departure).toISOString(),
       loadLb,
       intervalMi,
+      units,
     });
   }
 
@@ -73,6 +77,14 @@ export function TripForm({ loading, regions, regionId, onRegionChange, onSubmit 
         value={destination}
         onChange={setDestination}
       />
+      <p className={styles.hint}>
+        {units === "metric" ? "Showing km and kg" : "Showing miles and lb"}
+        {origin && destination
+          ? units === "metric"
+            ? ", both places use metric"
+            : ", one or both places use imperial"
+          : ` for ${region?.name ?? "this region"}`}
+      </p>
 
       <div className={styles.row}>
         <label className={styles.field}>
@@ -84,13 +96,14 @@ export function TripForm({ loading, regions, regionId, onRegionChange, onSubmit 
           />
         </label>
         <label className={styles.field}>
-          <span>Load (lb)</span>
+          <span>Load ({loadUnit(units)})</span>
+          {/* load is kept in lb, the risk rules use lb */}
           <input
             type="number"
             min={1}
             step={1}
-            value={loadLb}
-            onChange={(e) => setLoadLb(Number(e.target.value))}
+            value={Math.round(lbToDisplay(loadLb, units))}
+            onChange={(e) => setLoadLb(displayToLb(Number(e.target.value), units))}
           />
         </label>
       </div>
@@ -105,9 +118,11 @@ export function TripForm({ loading, regions, regionId, onRegionChange, onSubmit 
             if (ready) submit(v);
           }}
         >
-          <option value={10}>10 miles</option>
-          <option value={25}>25 miles</option>
-          <option value={50}>50 miles</option>
+          {[10, 25, 50].map((mi) => (
+            <option key={mi} value={mi}>
+              {intervalLabel(mi, units)}
+            </option>
+          ))}
         </select>
       </label>
 
