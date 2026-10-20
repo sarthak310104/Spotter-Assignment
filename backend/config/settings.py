@@ -7,9 +7,19 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
+
+def env_list(name, default):
+    # "a, b," -> ["a", "b"]; an empty or blank variable falls back to the default
+    items = [v.strip().rstrip("/") for v in (os.getenv(name) or "").split(",") if v.strip()]
+    return items or default
+
+
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-only-not-secret")
 DEBUG = os.getenv("DEBUG", "1") == "1"
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", ["localhost", "127.0.0.1"])
+# Render sets this to the service's own URL, so it never has to be typed in
+if os.getenv("RENDER_EXTERNAL_HOSTNAME"):
+    ALLOWED_HOSTS.append(os.environ["RENDER_EXTERNAL_HOSTNAME"])
 
 INSTALLED_APPS = [
     "django.contrib.auth",
@@ -50,9 +60,19 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.AllowAny"],
     "UNAUTHENTICATED_USER": None,
+    # JSON only; the browsable HTML pages need templates this API doesn't have
+    "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
 }
 
-CORS_ALLOWED_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
+# with DEBUG off Django hides tracebacks, so send errors to stdout for Render's logs
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "loggers": {"django.request": {"handlers": ["console"], "level": "ERROR"}},
+}
+
+CORS_ALLOWED_ORIGINS = env_list("CORS_ORIGINS", ["http://localhost:5173"])
 
 USE_TZ = True
 TIME_ZONE = "UTC"
