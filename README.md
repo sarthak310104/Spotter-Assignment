@@ -57,7 +57,7 @@ Pick a region first (United States, Canada, North America, Europe, United Kingdo
 ## Assumptions
 
 - The brief's rules are in US units (mph, in/hr, lb), so the backend always works in those.
-- Display units follow the trip: km, kg, km/h, mm/hr and cm/hr only when both origin and destination use metric. Anything touching the US or UK (whose roads use miles), including a USA to Canada run, stays in miles and lb. The 10/25/50 mile intervals show as 16/40/80 km.
+- Display units follow the trip: km, kg, km/h, mm/hr and cm/hr only when both origin and destination use metric. Anything touching the US or UK (whose roads use miles), including a USA to Canada run, stays in miles and lb. Checkpoint spacing keeps the same numbers in both systems: every 10/25/50 miles, or every 10/25/50 km on metric trips (the backend converts km to miles before sampling).
 
 - Range boundaries: lower bound inclusive (25 mph is Moderate, 0.25 in/hr rain is High), 1.00 in/hr rain and 3.0 in/hr snow are still Severe.
 - No-travel miles rank worse than severe miles, even though the brief only lists severe and high.

@@ -18,19 +18,19 @@ export function TripForm({ loading, regions, regionId, onRegionChange, onSubmit 
   const [destination, setDestination] = useState<Place | null>(null);
   const [departure, setDeparture] = useState(nextHourLocal());
   const [loadLb, setLoadLb] = useState(40000);
-  const [interval, setIntervalMi] = useState<Interval>(25);
+  const [step, setStep] = useState<Interval>(25);
   const region = regions.find((r) => r.id === regionId);
   const units = unitsFor(origin, destination, region?.units ?? "imperial");
   const ready = origin && destination && loadLb > 0;
 
-  function submit(intervalMi = interval) {
+  function submit(nextStep = step) {
     if (!origin || !destination) return;
     onSubmit({
       origin,
       destination,
       departure: new Date(departure).toISOString(),
-      loadLb,
-      intervalMi,
+      loadLb: Math.round(loadLb), // kg input leaves decimals, the API wants whole lb
+      interval: nextStep,
       units,
     });
   }
@@ -111,16 +111,16 @@ export function TripForm({ loading, regions, regionId, onRegionChange, onSubmit 
       <label className={styles.field}>
         <span>Check weather every</span>
         <select
-          value={interval}
+          value={step}
           onChange={(e) => {
             const v = Number(e.target.value) as Interval;
-            setIntervalMi(v);
+            setStep(v);
             if (ready) submit(v);
           }}
         >
-          {[10, 25, 50].map((mi) => (
-            <option key={mi} value={mi}>
-              {intervalLabel(mi, units)}
+          {[10, 25, 50].map((n) => (
+            <option key={n} value={n}>
+              {intervalLabel(n, units)}
             </option>
           ))}
         </select>

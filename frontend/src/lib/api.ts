@@ -27,8 +27,9 @@ export const fetchPlan = (t: TripInput) =>
       origin: t.origin,
       destination: t.destination,
       departure: t.departure,
-      load_lb: Math.round(t.loadLb),
-      interval_mi: t.intervalMi,
+      load_lb: t.loadLb,
+      interval: t.interval,
+      interval_unit: t.units === "metric" ? "km" : "mi",
     }),
   });
 

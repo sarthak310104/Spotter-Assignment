@@ -3,6 +3,8 @@ from datetime import timedelta
 from django.utils import timezone
 from rest_framework import serializers
 
+KM_PER_MI = 1.609344
+
 
 class PlaceSerializer(serializers.Serializer):
     label = serializers.CharField(required=False, allow_blank=True)
@@ -24,7 +26,14 @@ class PlanSerializer(serializers.Serializer):
     destination = PlaceSerializer()
     departure = serializers.DateTimeField(validators=[_check_departure])
     load_lb = serializers.IntegerField(min_value=1, max_value=200_000)
-    interval_mi = serializers.ChoiceField(choices=[10, 25, 50], default=25)
+    interval = serializers.ChoiceField(choices=[10, 25, 50], default=25)
+    interval_unit = serializers.ChoiceField(choices=["mi", "km"], default="mi")
+
+    def validate(self, data):
+        # the planner samples in miles, so 25 km becomes ~15.5 mi here
+        step = data.pop("interval")
+        data["interval_mi"] = step if data.pop("interval_unit") == "mi" else step / KM_PER_MI
+        return data
 
 
 class HeatmapSerializer(serializers.Serializer):

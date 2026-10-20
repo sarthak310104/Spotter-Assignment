@@ -57,6 +57,6 @@ export type TripInput = {
   destination: Place;
   departure: string;
   loadLb: number;
-  intervalMi: Interval;
+  interval: Interval; // in the trip's units: miles, or km for metric
   units: Units; // display only, the backend always works in mi, mph, in and lb
 };

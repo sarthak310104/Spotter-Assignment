@@ -25,9 +25,9 @@ export function marker(mi: number, u: Units) {
   return u === "metric" ? `Km ${Math.round(mi * KM_PER_MI)}` : `Mile ${Math.round(mi)}`;
 }
 
-// 10/25/50 mi from the brief shown as rounded km
-export function intervalLabel(mi: number, u: Units) {
-  return u === "metric" ? `${Math.round(mi * KM_PER_MI)} km` : `${mi} miles`;
+// same 10/25/50 steps, read as km on metric trips
+export function intervalLabel(step: number, u: Units) {
+  return u === "metric" ? `${step} km` : `${step} miles`;
 }
 
 export function weatherLine(w: { wind_mph: number; rain_in: number; snow_in: number }, u: Units) {
