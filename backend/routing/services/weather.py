@@ -1,3 +1,4 @@
+import time
 from concurrent.futures import ThreadPoolExecutor
 
 import requests
@@ -9,6 +10,11 @@ from . import storm
 OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
 BATCH_SIZE = 50
 FORECAST_DAYS = 10
+RETRIES = 2  # extra tries after a 429 before giving up
+
+
+class WeatherBusy(Exception):
+    pass
 
 
 def _key(cell):
@@ -16,20 +22,15 @@ def _key(cell):
 
 
 def _fetch_batch(cells):
-    resp = requests.get(
-        OPEN_METEO_URL,
-        params={
-            "latitude": ",".join(str(c[0]) for c in cells),
-            "longitude": ",".join(str(c[1]) for c in cells),
-            "hourly": "wind_speed_10m,rain,showers,snowfall",
-            "wind_speed_unit": "mph",
-            "precipitation_unit": "inch",
-            "timeformat": "unixtime",
-            "timezone": "GMT",
-            "forecast_days": FORECAST_DAYS,
-        },
-        timeout=20,
-    )
+    for attempt in range(RETRIES + 1):
+        resp = _request(cells)
+        if resp.status_code != 429:
+            break
+        if attempt == RETRIES:
+            raise WeatherBusy("Open-Meteo rate limit reached")
+        # Open-Meteo limits per IP; back off 2s, then 4s, unless it says otherwise
+        wait = resp.headers.get("Retry-After")
+        time.sleep(min(float(wait) if wait else 2 ** (attempt + 1), 8))
     resp.raise_for_status()
     body = resp.json()
     body = body if isinstance(body, list) else [body]
@@ -44,6 +45,23 @@ def _fetch_batch(cells):
             "snow": [v or 0 for v in h["snowfall"]],
         }
     return out
+
+
+def _request(cells):
+    return requests.get(
+        OPEN_METEO_URL,
+        params={
+            "latitude": ",".join(str(c[0]) for c in cells),
+            "longitude": ",".join(str(c[1]) for c in cells),
+            "hourly": "wind_speed_10m,rain,showers,snowfall",
+            "wind_speed_unit": "mph",
+            "precipitation_unit": "inch",
+            "timeformat": "unixtime",
+            "timezone": "GMT",
+            "forecast_days": FORECAST_DAYS,
+        },
+        timeout=20,
+    )
 
 
 def get_series(cells):

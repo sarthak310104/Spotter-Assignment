@@ -82,7 +82,8 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 HERE_API_KEY = os.getenv("HERE_API_KEY", "")
-WEATHER_CACHE_SECONDS = int(os.getenv("WEATHER_CACHE_SECONDS", "1800"))
+# forecasts change slowly, and a long cache keeps us under Open-Meteo's free limits
+WEATHER_CACHE_SECONDS = int(os.getenv("WEATHER_CACHE_SECONDS", "10800"))
 
 # "lat,lng" adds a fake storm there for demos, leave empty for real weather
 _storm = os.getenv("DEMO_STORM", "").split(",")

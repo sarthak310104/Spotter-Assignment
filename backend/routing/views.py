@@ -6,10 +6,18 @@ from rest_framework.views import APIView
 from .regions import DEFAULT_REGION, REGIONS, public_list
 from .serializers import HeatmapSerializer, PlanSerializer
 from .services import heatmap, here, planner
+from .services.weather import WeatherBusy
 
 
 def _upstream_error(exc):
     return Response({"detail": str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+
+
+def _weather_busy():
+    return Response(
+        {"detail": "The weather service is busy right now. Wait a minute and try again."},
+        status=status.HTTP_503_SERVICE_UNAVAILABLE,
+    )
 
 
 class HealthView(APIView):
@@ -42,6 +50,8 @@ class PlanView(APIView):
         s.is_valid(raise_exception=True)
         try:
             return Response(planner.plan_trip(**s.validated_data))
+        except WeatherBusy:
+            return _weather_busy()
         except (here.HereError, requests.RequestException) as exc:
             return _upstream_error(exc)
 
@@ -52,5 +62,7 @@ class HeatmapView(APIView):
         s.is_valid(raise_exception=True)
         try:
             return Response(heatmap.build(**s.validated_data))
+        except WeatherBusy:
+            return _weather_busy()
         except requests.RequestException as exc:
             return _upstream_error(exc)

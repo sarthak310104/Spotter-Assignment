@@ -3,7 +3,7 @@ from .geo import sample_every, snap, thin
 from .recommend import pick_best, summarize
 from .risk import assess
 
-CHECKPOINT_CELL = 0.1  # degrees (~7 mi), checkpoints closer than this share a forecast
+CHECKPOINT_CELL = 0.25  # degrees (~17 mi), nearby checkpoints share one forecast to save API calls
 METERS_PER_MILE = 1609.344
 
 
