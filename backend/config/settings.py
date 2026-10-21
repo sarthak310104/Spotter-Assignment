@@ -1,4 +1,5 @@
 import os
+import tempfile
 from pathlib import Path
 
 import dj_database_url
@@ -48,11 +49,12 @@ DATABASES = {
     )
 }
 
-# weather responses are cached in a plain db table (python manage.py createcachetable)
+# weather is cached as files on local disk: a remote DB cache costs several round trips per location
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
-        "LOCATION": "weather_cache",
+        "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+        "LOCATION": os.path.join(tempfile.gettempdir(), "truck_weather_cache"),
+        "OPTIONS": {"MAX_ENTRIES": 5000},
     }
 }
 

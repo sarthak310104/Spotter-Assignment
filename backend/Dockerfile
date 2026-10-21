@@ -10,5 +10,4 @@ COPY . .
 RUN python manage.py collectstatic --noinput
 
 CMD python manage.py migrate --noinput && \
-    python manage.py createcachetable && \
-    gunicorn config.wsgi -b 0.0.0.0:$PORT --workers 2 --timeout 60
+    gunicorn config.wsgi -b 0.0.0.0:$PORT --workers 2 --timeout 120
