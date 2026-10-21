@@ -71,7 +71,10 @@ LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "handlers": {"console": {"class": "logging.StreamHandler"}},
-    "loggers": {"django.request": {"handlers": ["console"], "level": "ERROR"}},
+    "loggers": {
+        "django.request": {"handlers": ["console"], "level": "ERROR"},
+        "routing": {"handlers": ["console"], "level": "WARNING"},
+    },
 }
 
 CORS_ALLOWED_ORIGINS = env_list("CORS_ORIGINS", ["http://localhost:5173"])
@@ -86,6 +89,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 HERE_API_KEY = os.getenv("HERE_API_KEY", "")
 # forecasts change slowly, and a long cache keeps us under Open-Meteo's free limits
 WEATHER_CACHE_SECONDS = int(os.getenv("WEATHER_CACHE_SECONDS", "10800"))
+# Open-Meteo limits free use per IP, and Render's IPs are shared, so prod points this at a proxy
+WEATHER_URL = os.getenv("WEATHER_URL") or "https://api.open-meteo.com/v1/forecast"
+WEATHER_PROXY_KEY = os.getenv("WEATHER_PROXY_KEY", "")
 
 # "lat,lng" adds a fake storm there for demos, leave empty for real weather
 _storm = os.getenv("DEMO_STORM", "").split(",")

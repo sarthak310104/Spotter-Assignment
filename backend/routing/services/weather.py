@@ -1,3 +1,4 @@
+import logging
 import time
 from concurrent.futures import ThreadPoolExecutor
 
@@ -7,7 +8,7 @@ from django.core.cache import cache
 
 from . import storm
 
-OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
+log = logging.getLogger(__name__)
 BATCH_SIZE = 50
 FORECAST_DAYS = 10
 RETRIES = 2  # extra tries after a 429 before giving up
@@ -26,8 +27,10 @@ def _fetch_batch(cells):
         resp = _request(cells)
         if resp.status_code != 429:
             break
+        reason = _reason(resp)
+        log.warning("Open-Meteo 429 (try %d): %s", attempt + 1, reason)
         if attempt == RETRIES:
-            raise WeatherBusy("Open-Meteo rate limit reached")
+            raise WeatherBusy(reason)
         # Open-Meteo limits per IP; back off 2s, then 4s, unless it says otherwise
         wait = resp.headers.get("Retry-After")
         time.sleep(min(float(wait) if wait else 2 ** (attempt + 1), 8))
@@ -47,9 +50,20 @@ def _fetch_batch(cells):
     return out
 
 
+def _reason(resp):
+    try:
+        body = resp.json()
+    except ValueError:
+        body = None
+    return (body.get("reason") if isinstance(body, dict) else None) or "Open-Meteo rate limit reached"
+
+
 def _request(cells):
+    # WEATHER_URL can point at our Cloudflare Worker, which gets its own Open-Meteo quota
+    headers = {"X-Proxy-Key": settings.WEATHER_PROXY_KEY} if settings.WEATHER_PROXY_KEY else {}
     return requests.get(
-        OPEN_METEO_URL,
+        settings.WEATHER_URL,
+        headers=headers,
         params={
             "latitude": ",".join(str(c[0]) for c in cells),
             "longitude": ",".join(str(c[1]) for c in cells),

@@ -51,3 +51,26 @@ def test_busy_weather_returns_503(client, monkeypatch, settings):
     )
     assert resp.status_code == 503
     assert "busy" in resp.json()["detail"]
+
+def test_429_reason_is_kept(monkeypatch):
+    monkeypatch.setattr(weather, "_request", lambda cells: FakeResp(429, {"error": True, "reason": "Daily API request limit exceeded"}))
+    with pytest.raises(weather.WeatherBusy, match="Daily"):
+        weather._fetch_batch([(36.0, -99.0)])
+
+
+def test_requests_go_to_configured_url_with_key(monkeypatch, settings):
+    settings.WEATHER_URL = "https://wx-proxy.example.workers.dev/v1/forecast"
+    settings.WEATHER_PROXY_KEY = "secret"
+    seen = {}
+
+    def fake_get(url, params, headers, timeout):
+        seen.update(url=url, headers=headers)
+        return FakeResp(200, {"hourly": HOURLY})
+
+    monkeypatch.setattr(weather.requests, "get", fake_get)
+    weather._fetch_batch([(36.0, -99.0)])
+    assert seen == {"url": "https://wx-proxy.example.workers.dev/v1/forecast", "headers": {"X-Proxy-Key": "secret"}}
+
+
+def test_default_url_is_open_meteo_without_key(settings):
+    assert settings.WEATHER_URL == "https://api.open-meteo.com/v1/forecast"
